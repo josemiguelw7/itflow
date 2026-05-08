@@ -63,11 +63,26 @@ export function IntegrationsTab() {
   }
 
   async function handleTest(id: string) {
+    if (id === 'okta') { showToast('Okta configured via env vars — no test available here'); return }
     setTesting(t => ({ ...t, [id]: true }))
-    await new Promise(r => setTimeout(r, 1200))
-    setTesting(t => ({ ...t, [id]: false }))
-    setConnected(c => ({ ...c, [id]: true }))
-    showToast(`✓ ${INTEGRATIONS.find(i=>i.id===id)?.name} connected successfully`)
+    try {
+      const res  = await fetch('/api/integrations/test', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ integration: id }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setConnected(c => ({ ...c, [id]: true }))
+        showToast(`✓ ${INTEGRATIONS.find(i=>i.id===id)?.name}: ${data.message}`)
+      } else {
+        showToast(`✗ ${data.message}`)
+      }
+    } catch (e) {
+      showToast(`✗ Connection failed`)
+    } finally {
+      setTesting(t => ({ ...t, [id]: false }))
+    }
   }
 
   return (
