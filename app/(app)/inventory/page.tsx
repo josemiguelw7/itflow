@@ -125,7 +125,7 @@ export default function InventoryPage() {
                   onClick={() => col.key && setSortBy(col.key as typeof sortBy)}
                   style={{
                     padding: '10px 16px', textAlign: 'left',
-                    fontSize: 10, fontWeight: 600, color: '#8b949e',
+                    fontSize: 10, fontWeight: 600,
                     letterSpacing: '0.5px', textTransform: 'uppercase',
                     cursor: col.key ? 'pointer' : 'default',
                     color: col.key === sortBy ? 'var(--teal)' : '#8b949e',
