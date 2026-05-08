@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  address   String?
+  timezone  String   @default("America/Chicago")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users                 User[]
+  assets                Asset[]
+  stockBalances         StockBalance[]
+  outboundShipments     Shipment[] @relation("ShipmentOrigin")
+  inboundShipments      Shipment[] @relation("ShipmentDestination")
+
+  @@map("locations")
+}
+
+enum UserRole {
+  TECHNICIAN
+  SITE_MANAGER
+  REGIONAL_MANAGER
+  ADMIN
+}
+
+model User {
+  id         String   @id @default(cuid())
+  oktaId     String   @unique
+  email      String   @unique
+  name       String
+  role       UserRole @default(TECHNICIAN)
+  locationId String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  location   Location   @relation(fields: [locationId], references: [id])
+  requests   Request[]
+  approvals  Approval[]
+  auditLogs  AuditLog[]
+
+  @@map("users")
+}
+
+enum ItemType {
+  SERIALIZED
+  QUANTITY
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  type        ItemType
+  make        String?
+  model       String?
+  imageUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets        Asset[]
+  stockBalances StockBalance[]
+  requestLines  RequestLine[]
+
+  @@map("items")
+}
+
+enum AssetStatus {
+  AVAILABLE
+  RESERVED
+  IN_TRANSIT
+  PENDING_WIPE
+  READY
+  DAMAGED
+  ASSIGNED_OUT_OF_IT
+  RETIRED
+}
+
+enum AssetCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+model Asset {
+  id           String         @id @default(cuid())
+  assetTag     String         @unique
+  serialNumber String         @unique
+  itemId       String
+  locationId   String
+  status       AssetStatus    @default(AVAILABLE)
+  condition    AssetCondition @default(GOOD)
+  notes        String?
+  purchasedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  item         Item           @relation(fields: [itemId], references: [id])
+  location     Location       @relation(fields: [locationId], references: [id])
+  requestLines RequestLine[]
+  auditLogs    AuditLog[]
+
+  @@map("assets")
+}
+
+model StockBalance {
+  id         String   @id @default(cuid())
+  itemId     String
+  locationId String
+  total      Int      @default(0)
+  available  Int      @default(0)
+  reserved   Int      @default(0)
+  inTransit  Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  item     Item     @relation(fields: [itemId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@unique([itemId, locationId])
+  @@map("stock_balances")
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  RESERVED
+  SHIPPED
+  RECEIVED
+  CANCELLED
+  COMPLETED
+}
+
+enum RequestPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model Request {
+  id                    String          @id @default(cuid())
+  requesterId           String
+  sourceLocationId      String?
+  destinationLocationId String
+  status                RequestStatus   @default(SUBMITTED)
+  priority              RequestPriority @default(NORMAL)
+  neededByDate          DateTime?
+  jiraIssueKey          String?
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  requester  User          @relation(fields: [requesterId], references: [id])
+  lines      RequestLine[]
+  approvals  Approval[]
+  shipments  Shipment[]
+  auditLogs  AuditLog[]
+
+  @@map("requests")
+}
+
+model RequestLine {
+  id        String  @id @default(cuid())
+  requestId String
+  itemId    String
+  assetId   String?
+  quantity  Int     @default(1)
+
+  request Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  item    Item     @relation(fields: [itemId], references: [id])
+  asset   Asset?   @relation(fields: [assetId], references: [id])
+
+  @@map("request_lines")
+}
+
+enum ApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Approval {
+  id         String           @id @default(cuid())
+  requestId  String
+  approverId String
+  decision   ApprovalDecision @default(PENDING)
+  notes      String?
+  decidedAt  DateTime?
+  createdAt  DateTime         @default(now())
+
+  request  Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approver User    @relation(fields: [approverId], references: [id])
+
+  @@map("approvals")
+}
+
+enum ShipmentStatus {
+  PREPARING
+  SHIPPED
+  IN_TRANSIT
+  EXCEPTION
+  DELIVERED
+  RECEIVED
+}
+
+model Shipment {
+  id               String         @id @default(cuid())
+  requestId        String?
+  originId         String
+  destinationId    String
+  status           ShipmentStatus @default(PREPARING)
+  carrier          String?
+  trackingNumber   String?
+  shippedAt        DateTime?
+  estimatedArrival DateTime?
+  receivedAt       DateTime?
+  receiverNotes    String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  request     Request?  @relation(fields: [requestId], references: [id])
+  origin      Location  @relation("ShipmentOrigin", fields: [originId], references: [id])
+  destination Location  @relation("ShipmentDestination", fields: [destinationId], references: [id])
+  auditLogs   AuditLog[]
+
+  @@map("shipments")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
