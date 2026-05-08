@@ -5,8 +5,8 @@ export const DEMO_ACCOUNTS = [
   {
     role:     'TECHNICIAN' as const,
     name:     'Alex Rivera',
-    email:    'demo-tech@itflow.app',
-    password: 'demo1234',
+    email:    'tech@itflow-demo.com',
+    password: 'Demo1234!',
     site:     'Austin HQ',
     siteCode: 'ATX',
     avatar:   'AR',
@@ -16,8 +16,8 @@ export const DEMO_ACCOUNTS = [
   {
     role:     'SITE_MANAGER' as const,
     name:     'Jordan Kim',
-    email:    'demo-manager@itflow.app',
-    password: 'demo1234',
+    email:    'manager@itflow-demo.com',
+    password: 'Demo1234!',
     site:     'Chicago',
     siteCode: 'CHI',
     avatar:   'JK',
@@ -27,8 +27,8 @@ export const DEMO_ACCOUNTS = [
   {
     role:     'REGIONAL_MANAGER' as const,
     name:     'Sam Torres',
-    email:    'demo-regional@itflow.app',
-    password: 'demo1234',
+    email:    'regional@itflow-demo.com',
+    password: 'Demo1234!',
     site:     'Austin HQ',
     siteCode: 'ATX',
     avatar:   'ST',
@@ -38,8 +38,8 @@ export const DEMO_ACCOUNTS = [
   {
     role:     'ADMIN' as const,
     name:     'Morgan Chen',
-    email:    'demo-admin@itflow.app',
-    password: 'demo1234',
+    email:    'admin@itflow-demo.com',
+    password: 'Demo1234!',
     site:     'Austin HQ',
     siteCode: 'ATX',
     avatar:   'MC',
