@@ -1,26 +1,24 @@
-@import "tailwindcss";
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --navy:   #1E2240;
-  --teal:   #2ABFA0;
-  --teal-d: #1fa88c;
-  --charcoal: #2E2E2E;
-  --slate:  #5C6285;
-  --muted:  #8B9BB4;
-  --ice:    #F0F2F7;
-  --blue:   #3B8BFA;
-  --green:  #39D353;
-  --amber:  #F5A623;
-  --orange: #FF6B2B;
+  --navy:    #1E2240;
+  --teal:    #2ABFA0;
+  --teal-d:  #1fa88c;
+  --charcoal:#2E2E2E;
+  --slate:   #5C6285;
+  --muted:   #8B9BB4;
+  --ice:     #F0F2F7;
+  --blue:    #3B8BFA;
+  --green:   #39D353;
+  --amber:   #F5A623;
+  --orange:  #FF6B2B;
   --sidebar-w: 220px;
 }
-
-* { box-sizing: border-box; }
 
 body {
   background: #0d1117;
   color: #e6edf3;
-  font-family: var(--font-geist-sans, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
