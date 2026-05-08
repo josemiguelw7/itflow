@@ -26,7 +26,7 @@ export function OnboardingProvider({ children, userId }: { children: React.React
   const [onboardingDone, setOnboardingDone] = useState(false)
 
   useEffect(() => {
-    const done = localStorage.getItem(`itflow_onboarding_${userId}`)
+    const done  = localStorage.getItem(`itflow_onboarding_${userId}`)
     const steps = JSON.parse(localStorage.getItem(`itflow_tour_steps_${userId}`) ?? '[]')
     setSeenSteps(steps)
     if (!done) {
