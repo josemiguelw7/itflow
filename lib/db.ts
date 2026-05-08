@@ -1,6 +1,8 @@
-import { PrismaClient } from '@prisma/client/edge'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaClient } = require('@prisma/client')
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const globalForPrisma = globalThis as unknown as { prisma: any }
 
 export const prisma =
   globalForPrisma.prisma ??
