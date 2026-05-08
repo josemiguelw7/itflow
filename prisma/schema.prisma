@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Location {
@@ -47,7 +46,6 @@ model User {
   location   Location   @relation(fields: [locationId], references: [id])
   requests   Request[]
   approvals  Approval[]
-  auditLogs  AuditLog[]
 
   @@map("users")
 }
@@ -111,7 +109,6 @@ model Asset {
   item         Item           @relation(fields: [itemId], references: [id])
   location     Location       @relation(fields: [locationId], references: [id])
   requestLines RequestLine[]
-  auditLogs    AuditLog[]
 
   @@map("assets")
 }
@@ -169,7 +166,6 @@ model Request {
   lines      RequestLine[]
   approvals  Approval[]
   shipments  Shipment[]
-  auditLogs  AuditLog[]
 
   @@map("requests")
 }
@@ -236,7 +232,6 @@ model Shipment {
   request     Request?  @relation(fields: [requestId], references: [id])
   origin      Location  @relation("ShipmentOrigin", fields: [originId], references: [id])
   destination Location  @relation("ShipmentDestination", fields: [destinationId], references: [id])
-  auditLogs   AuditLog[]
 
   @@map("shipments")
 }
@@ -251,8 +246,6 @@ model AuditLog {
   after      Json?
   meta       Json?
   createdAt  DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
 
   @@index([entityType, entityId])
   @@index([userId])
