@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { PrismaClient } = require('@prisma/client')
-const { ItemType, AssetStatus, AssetCondition } = require('@prisma/client')
+import { PrismaClient, ItemType, AssetStatus, AssetCondition } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
