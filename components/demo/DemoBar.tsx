@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useOnboarding } from '@/components/onboarding/OnboardingProvider'
 
@@ -17,7 +16,6 @@ interface Props { currentEmail: string }
 
 export function DemoBar({ currentEmail }: Props) {
   const [switching, setSwitching] = useState<string | null>(null)
-  const router    = useRouter()
   const supabase  = createClient()
   const { showTour } = useOnboarding()
 
@@ -31,8 +29,8 @@ export function DemoBar({ currentEmail }: Props) {
     const { error } = await supabase.auth.signInWithPassword({ email: role.email, password: role.password })
     if (error) { console.error('Demo switch failed:', error); setSwitching(null); return }
     localStorage.removeItem(`itflow_onboarding_${role.email}`)
-    router.push('/dashboard')
-    setSwitching(null)
+    // Hard reload so server layout picks up the new session
+    window.location.href = '/dashboard'
   }
 
   return (
@@ -100,7 +98,7 @@ export function DemoBar({ currentEmail }: Props) {
           ↺ Tour
         </button>
 
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
+        <button onClick={() => supabase.auth.signOut().then(() => { window.location.href = '/demo' })}
           style={{ background:'transparent', border:'none', fontSize:11, color:'#8b949e', cursor:'pointer', flexShrink:0, whiteSpace:'nowrap' as const }}>
           Exit ✕
         </button>
