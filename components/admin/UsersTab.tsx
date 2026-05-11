@@ -53,7 +53,7 @@ export function UsersTab({ canManage = true }: { canManage?: boolean }) {
                 </td>
                 <td style={tdSt}><span style={{ background:'rgba(255,255,255,0.06)', padding:'2px 7px', borderRadius:4, fontSize:11, fontWeight:600 }}>{u.siteCode}</span></td>
                 <td style={tdSt}>
-                  {readOnly
+                  {!canManage
                     ? <span style={{ fontSize:12, fontWeight:600, color:ROLE_COLORS[u.role] }}>{ROLE_LABELS[u.role]}</span>
                     : <select value={u.role} onChange={e=>changeRole(u.id, e.target.value as AdminUser['role'])} style={{ background:'transparent', border:'none', fontSize:12, fontWeight:600, color:ROLE_COLORS[u.role], cursor:'pointer', outline:'none' }}>
                         {['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'].map(r=>(
@@ -73,7 +73,7 @@ export function UsersTab({ canManage = true }: { canManage?: boolean }) {
                     {u.active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                {!readOnly && (
+                {canManage && (
                   <td style={{ ...tdSt, textAlign:'right' }}>
                     <button onClick={()=>toggleActive(u.id)} style={{ background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'3px 10px', fontSize:11, color:'#8b949e', cursor:'pointer' }}>
                       {u.active ? 'Deactivate' : 'Activate'}

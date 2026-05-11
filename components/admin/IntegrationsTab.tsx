@@ -50,7 +50,7 @@ const INTEGRATIONS: Integration[] = [
   },
 ]
 
-export function IntegrationsTab({ readOnly = false }: { readOnly?: boolean }) {
+export function IntegrationsTab({ canManage = true }: { canManage?: boolean }) {
   const [configs, setConfigs] = useState<Record<string, Record<string, string>>>({})
   const [connected, setConnected] = useState<Record<string, boolean>>({})
   const [testing, setTesting] = useState<Record<string, boolean>>({})
@@ -88,7 +88,7 @@ export function IntegrationsTab({ readOnly = false }: { readOnly?: boolean }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
       {toast && <div style={{ position:'fixed', bottom:80, right:24, zIndex:500, background:'#161b22', border:'1px solid rgba(42,191,160,0.3)', borderRadius:9, padding:'12px 18px', fontSize:13, color:'var(--teal)' }}>{toast}</div>}
-      {readOnly && <div style={{ marginBottom:14, padding:'9px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>🔒 Integration settings are Admin-only — contact your Admin to configure connections</div>}
+      {!canManage && <div style={{ marginBottom:14, padding:'9px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>🔒 Integration settings are Admin-only — contact your Admin to configure connections</div>}
 
       {INTEGRATIONS.map(integ => {
         const isConnected = connected[integ.id] ?? integ.connected
@@ -131,16 +131,16 @@ export function IntegrationsTab({ readOnly = false }: { readOnly?: boolean }) {
                     <input
                       type={f.secret ? 'password' : 'text'}
                       value={cfg[f.key] ?? ''}
-                      onChange={e => !readOnly && setField(integ.id, f.key, e.target.value)}
-                      placeholder={readOnly ? '••••••••' : f.placeholder}
-                      disabled={readOnly}
-                      style={{ width:'100%', background:'#0d1117', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'8px 12px', fontSize:13, color:'#e6edf3', outline:'none', opacity: readOnly ? 0.5 : 1 }}
+                      onChange={e => canManage && setField(integ.id, f.key, e.target.value)}
+                      placeholder={!canManage ? '••••••••' : f.placeholder}
+                      disabled={!canManage}
+                      style={{ width:'100%', background:'#0d1117', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'8px 12px', fontSize:13, color:'#e6edf3', outline:'none', opacity: !canManage ? 0.5 : 1 }}
                     />
                   </div>
                 ))}
               </div>
 
-              {!readOnly && (
+              {canManage && (
               <div style={{ display:'flex', gap:8, marginTop:4 }}>
                 <button
                   onClick={() => handleTest(integ.id)}
