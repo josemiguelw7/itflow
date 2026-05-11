@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DEMO_ACCOUNTS } from '@/lib/data/demo'
 
+const ROLE_LABELS: Record<string, string> = {
+  TECHNICIAN:       'Technician',
+  SITE_MANAGER:     'Supervisor',
+  REGIONAL_MANAGER: 'Manager',
+  ADMIN:            'Admin',
+}
+
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   TECHNICIAN:       ['View inventory', 'Submit requests', 'Ship & receive', 'View dashboard'],
   SITE_MANAGER:     ['All Technician access', 'Approve/reject requests', 'Site health alerts', 'Manage team'],
@@ -76,7 +83,7 @@ export default function DemoPage() {
                 </div>
                 <div>
                   <div style={{ fontWeight:600, fontSize:15 }}>{account.name}</div>
-                  <div style={{ fontSize:11, fontWeight:600, color:account.color, marginTop:1 }}>{account.role.replace(/_/g,' ')}</div>
+                  <div style={{ fontSize:11, fontWeight:600, color:account.color, marginTop:1 }}>{ROLE_LABELS[account.role]}</div>
                 </div>
               </div>
 

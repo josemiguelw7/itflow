@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useOnboarding } from '@/components/onboarding/OnboardingProvider'
 
 const DEMO_ROLES = [
-  { name:'Alex Rivera',  initials:'AR', role:'TECHNICIAN',       roleLabel:'Technician',   site:'ATX', email:'tech@itflow-demo.com',     password:'Demo1234!', color:'#8b949e' },
-  { name:'Jordan Kim',   initials:'JK', role:'SITE_MANAGER',     roleLabel:'Site Manager', site:'CHI', email:'manager@itflow-demo.com',   password:'Demo1234!', color:'#3B8BFA' },
-  { name:'Sam Torres',   initials:'ST', role:'REGIONAL_MANAGER', roleLabel:'Regional Mgr', site:'ATX', email:'regional@itflow-demo.com',  password:'Demo1234!', color:'#2ABFA0' },
-  { name:'Morgan Chen',  initials:'MC', role:'ADMIN',            roleLabel:'Admin',         site:'ATX', email:'admin@itflow-demo.com',     password:'Demo1234!', color:'#E8407A' },
+  { name:'Alex Rivera', initials:'AR', role:'TECHNICIAN',       roleLabel:'Technician', site:'ATX', email:'tech@itflow-demo.com',     password:'Demo1234!', color:'#8b949e' },
+  { name:'Dave',        initials:'DV', role:'SITE_MANAGER',     roleLabel:'Supervisor', site:'CHI', email:'manager@itflow-demo.com',   password:'Demo1234!', color:'#3B8BFA' },
+  { name:'Abe',         initials:'AB', role:'REGIONAL_MANAGER', roleLabel:'Manager',    site:'ATX', email:'regional@itflow-demo.com',  password:'Demo1234!', color:'#2ABFA0' },
+  { name:'Morgan Chen', initials:'MC', role:'ADMIN',            roleLabel:'Admin',      site:'ATX', email:'admin@itflow-demo.com',     password:'Demo1234!', color:'#E8407A' },
 ]
 
 export const DEMO_EMAILS = DEMO_ROLES.map(r => r.email)
