@@ -7,33 +7,26 @@ interface TourStep {
   selector: string
   title:    string
   body:     string
-  roles:    Role[]   // which roles see this step
-  tip?:     string   // extra tip shown in teal
+  roles:    Role[]
+  tip?:     string
 }
 
 const ALL_STEPS: TourStep[] = [
   {
-    id: 'dashboard-metrics',
+    id: 'dashboard',
     selector: '[data-tour="dashboard"]',
     title: 'Dashboard — your command center',
-    body: 'Four live metrics at the top: total assets across all sites, available inventory right now, requests needing attention, and items in transit.',
+    body: 'Four live metrics at the top: total assets, available inventory, requests needing attention, and items in transit. The site health bars show stock levels across all 8 locations.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-  },
-  {
-    id: 'site-health',
-    selector: '[data-tour="site-health"]',
-    title: 'Multi-site stock health',
-    body: 'Each bar shows inventory health per location. Green is healthy, amber is getting low, red needs action. Denver and Miami are flagged right now.',
-    roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: 'Click any site bar to jump to that location\'s inventory',
+    tip: 'Green = healthy · Amber = getting low · Red = needs action',
   },
   {
     id: 'approval-queue',
     selector: '[data-tour="approval-queue"]',
     title: 'Approval queue',
-    body: 'Transfer requests are approved by you (Supervisor). Purchase requests — new equipment from vendors — go to the Manager for budget approval.',
+    body: 'Transfer requests are approved by the Supervisor. Purchase requests — new equipment from vendors — go to the Manager for budget approval.',
     roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: 'Approve or reject with one click, right here',
+    tip: 'Approve or reject with one click right here',
   },
   {
     id: 'inventory',
@@ -43,33 +36,25 @@ const ALL_STEPS: TourStep[] = [
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
   },
   {
-    id: 'request-transfer',
+    id: 'requests',
     selector: '[data-tour="requests"]',
-    title: 'Requesting a transfer',
-    body: 'Find an item in inventory, click it, and hit Request Transfer. The form asks if it\'s a transfer of existing stock or a new purchase — that determines who approves it.',
+    title: 'Requests',
+    body: 'All transfer and purchase requests in one place. When you submit, the form first asks: transfer of existing inventory, or a new purchase? That determines who approves it.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
     tip: 'Transfers → Supervisor approves  ·  Purchases → Manager approves',
-  },
-  {
-    id: 'requests-page',
-    selector: '[data-tour="requests"]',
-    title: 'Requests page',
-    body: 'All requests in one place — filter by status or type. Pending items are highlighted. Each row shows who needs to approve it.',
-    roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
   },
   {
     id: 'shipments',
     selector: '[data-tour="shipments"]',
     title: 'Shipments',
-    body: 'Once approved, a request becomes a shipment. Add the carrier and tracking number, mark it shipped, and the item shows as in transit. When it arrives, confirm receipt — inventory updates automatically.',
+    body: 'Once approved, a request becomes a shipment. Enter carrier and tracking number, mark it shipped, and inventory shows in transit. When it arrives, confirm receipt — inventory updates automatically.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: 'Live carrier tracking (FedEx, UPS, USPS, DHL) is coming in the next phase',
   },
   {
     id: 'reports',
     selector: '[data-tour="reports"]',
     title: 'Reports',
-    body: 'Stock health across all sites, transfer trends over time, aging inventory that\'s been idle too long, and a full site summary with health scores.',
+    body: 'Stock health across all sites, transfer trends over time, aging inventory sitting idle too long, and a full site summary table with health scores.',
     roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
     tip: 'Use this to spot imbalances before they become problems',
   },
@@ -83,15 +68,15 @@ const ALL_STEPS: TourStep[] = [
   {
     id: 'demo-bar',
     selector: '[data-tour="demo-bar"]',
-    title: 'Demo bar',
-    body: 'You\'re in demo mode. Switch between all four roles instantly using the bar at the bottom — no logout needed. Each role gets its own first-time experience.',
+    title: 'Demo bar — switch roles instantly',
+    body: "You're in demo mode. Use the bar at the bottom to switch between all four roles without logging out. Each role gets its own first-time tour.",
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
   },
 ]
 
 interface Props {
-  role: Role
-  seenSteps: string[]
+  role:       Role
+  seenSteps:  string[]
   onComplete: () => void
   onMarkSeen: (step: string) => void
 }
@@ -109,7 +94,7 @@ export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props
     const el = document.querySelector(step.selector)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      setTimeout(() => setRect(el.getBoundingClientRect()), 200)
+      setTimeout(() => setRect(el.getBoundingClientRect()), 250)
     } else {
       setRect(null)
     }
@@ -118,34 +103,29 @@ export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props
 
   if (!step) return null
 
-  function next() {
-    if (idx < steps.length - 1) setIdx(i => i + 1)
-    else onComplete()
-  }
+  function next() { if (idx < steps.length - 1) setIdx(i => i + 1); else onComplete() }
   function prev() { if (idx > 0) setIdx(i => i - 1) }
 
-  const PAD      = 8
+  const PAD       = 8
   const TOOLTIP_W = 300
-  const winW = typeof window !== 'undefined' ? window.innerWidth : 1200
+  const winW = typeof window !== 'undefined' ? window.innerWidth  : 1200
   const winH = typeof window !== 'undefined' ? window.innerHeight : 800
 
   let tipTop  = rect ? rect.bottom + PAD + 12 : 160
   let tipLeft = rect ? Math.max(12, Math.min(rect.left, winW - TOOLTIP_W - 12)) : 40
-
-  // flip above if too low
-  if (rect && tipTop + 200 > winH) tipTop = rect.top - PAD - 210
+  if (rect && tipTop + 220 > winH) tipTop = rect.top - PAD - 230
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:900, pointerEvents:'none' }}>
-      {/* Overlay */}
-      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.6)' }} />
+      {/* Dim overlay — non-interactive */}
+      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.6)', pointerEvents:'none' }} />
 
-      {/* Spotlight */}
+      {/* Spotlight cutout */}
       {rect && (
         <div style={{
           position:'absolute',
-          top:  rect.top  - PAD,
-          left: rect.left - PAD,
+          top:    rect.top    - PAD,
+          left:   rect.left   - PAD,
           width:  rect.width  + PAD * 2,
           height: rect.height + PAD * 2,
           borderRadius: 10,
@@ -156,7 +136,7 @@ export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props
         }} />
       )}
 
-      {/* Tooltip */}
+      {/* Tooltip — interactive */}
       <div ref={tooltipRef} style={{
         position:'absolute', top:tipTop, left:tipLeft,
         width: TOOLTIP_W,
@@ -166,10 +146,10 @@ export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props
         pointerEvents:'all',
         boxShadow:'0 12px 40px rgba(0,0,0,0.5)',
         transition:'top 0.3s ease, left 0.3s ease',
+        zIndex: 901,
       }}>
-        {/* Step counter */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:'#2ABFA0', textTransform:'uppercase', letterSpacing:'0.5px' }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'#2ABFA0', textTransform:'uppercase', letterSpacing:'0.5px' }}>
             {step.title}
           </div>
           <div style={{ fontSize:11, color:'#8b949e' }}>{idx + 1} / {steps.length}</div>
@@ -179,26 +159,19 @@ export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props
           {step.body}
         </p>
 
-        {/* Tip */}
         {step.tip && (
           <div style={{ background:'rgba(42,191,160,0.08)', border:'1px solid rgba(42,191,160,0.2)', borderRadius:7, padding:'8px 10px', fontSize:11, color:'#2ABFA0', marginBottom:12, lineHeight:1.5 }}>
             💡 {step.tip}
           </div>
         )}
 
-        {/* Progress dots */}
-        <div style={{ display:'flex', gap:5, marginBottom:14 }}>
+        {/* Progress bar */}
+        <div style={{ display:'flex', gap:4, marginBottom:14 }}>
           {steps.map((_, i) => (
-            <div key={i} style={{
-              height: 3, borderRadius: 2,
-              flex: i === idx ? 2 : 1,
-              background: i < idx ? '#2ABFA0' : i === idx ? '#2ABFA0' : 'rgba(255,255,255,0.12)',
-              transition: 'all 0.25s',
-            }} />
+            <div key={i} style={{ height:3, borderRadius:2, flex: i === idx ? 2 : 1, background: i <= idx ? '#2ABFA0' : 'rgba(255,255,255,0.12)', transition:'all 0.25s' }} />
           ))}
         </div>
 
-        {/* Buttons */}
         <div style={{ display:'flex', gap:8, justifyContent:'space-between', alignItems:'center' }}>
           <button onClick={onComplete} style={{ padding:'6px 10px', borderRadius:6, fontSize:11, background:'transparent', color:'#8b949e', border:'1px solid rgba(255,255,255,0.1)', cursor:'pointer' }}>
             Skip tour

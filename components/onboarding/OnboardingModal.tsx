@@ -10,9 +10,11 @@ function isLoom(url: string) {
 }
 
 function getLoomEmbed(url: string) {
-  // Convert share URL to embed URL if needed
-  // https://www.loom.com/share/ID → https://www.loom.com/embed/ID
-  return url.replace('loom.com/share/', 'loom.com/embed/')
+  // Convert share URL to embed URL, force start from beginning
+  const embed = url.replace('loom.com/share/', 'loom.com/embed/')
+  // Add t=0 to always start from beginning, hide controls clutter
+  const separator = embed.includes('?') ? '&' : '?'
+  return `${embed}${separator}t=0&hide_owner=true&hide_share=true&hideEmbedTopBar=true`
 }
 
 export function OnboardingModal({ onClose, onStartTour }: Props) {
