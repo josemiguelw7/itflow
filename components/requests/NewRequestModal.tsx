@@ -2,7 +2,12 @@
 import { useState } from 'react'
 import { SITES_LIST, ITEMS_LIST } from '@/lib/data/requests'
 
-interface Props { onClose: () => void; onSubmit: (req: Record<string, unknown>) => void }
+interface Props {
+  onClose: () => void
+  onSubmit: (req: Record<string, unknown>) => void
+  preselectedItem?: { id: string; name: string; icon: string; type: string }
+  preselectedSource?: string
+}
 
 const STEPS = ['Item', 'Route', 'Details', 'Review']
 
@@ -13,12 +18,12 @@ const PRIORITY_OPTS = [
   { value: 'URGENT', label: 'Urgent', desc: 'Needed ASAP',       color: '#FF6B2B' },
 ]
 
-export function NewRequestModal({ onClose, onSubmit }: Props) {
-  const [step, setStep]         = useState(0)
-  const [item, setItem]         = useState(ITEMS_LIST[0])
+export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselectedSource }: Props) {
+  const [step, setStep]         = useState(preselectedItem ? 1 : 0)
+  const [item, setItem]         = useState(preselectedItem ?? ITEMS_LIST[0])
   const [quantity, setQuantity] = useState(1)
-  const [source, setSource]     = useState(SITES_LIST[0])
-  const [dest, setDest]         = useState(SITES_LIST[1])
+  const [source, setSource]     = useState(preselectedSource ?? SITES_LIST[0])
+  const [dest, setDest]         = useState(SITES_LIST.find(s => s !== (preselectedSource ?? SITES_LIST[0])) ?? SITES_LIST[1])
   const [priority, setPriority] = useState('NORMAL')
   const [neededBy, setNeededBy] = useState('')
   const [jiraKey, setJiraKey]   = useState('')
