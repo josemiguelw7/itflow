@@ -8,7 +8,7 @@ const TYPE_COLOR: Record<string, { color: string; bg: string }> = {
   QUANTITY:   { color:'#2ABFA0', bg:'rgba(42,191,160,0.12)' },
 }
 
-export function CatalogTab() {
+export function CatalogTab({ readOnly = false }: { readOnly?: boolean }) {
   const [items, setItems]   = useState<AdminItem[]>(ADMIN_ITEMS)
   const [cat, setCat]       = useState('All')
   const [search, setSearch] = useState('')
@@ -16,6 +16,7 @@ export function CatalogTab() {
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
   function toggleActive(id: string) {
+    if (readOnly) return
     setItems(prev => prev.map(i => i.id === id ? { ...i, active: !i.active } : i))
     showToast('Catalog item updated')
   }
@@ -28,7 +29,8 @@ export function CatalogTab() {
 
   return (
     <div>
-      {toast && <div style={{ position:'fixed', bottom:24, right:24, zIndex:500, background:'#161b22', border:'1px solid rgba(42,191,160,0.3)', borderRadius:9, padding:'12px 18px', fontSize:13, color:'var(--teal)' }}>{toast}</div>}
+      {toast && <div style={{ position:'fixed', bottom:80, right:24, zIndex:500, background:'#161b22', border:'1px solid rgba(42,191,160,0.3)', borderRadius:9, padding:'12px 18px', fontSize:13, color:'var(--teal)' }}>{toast}</div>}
+      {readOnly && <div style={{ marginBottom:14, padding:'9px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>🔒 Read-only catalog — contact Admin to add or modify items</div>}
 
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:10 }}>
         <div style={{ display:'flex', gap:6 }}>
@@ -42,7 +44,7 @@ export function CatalogTab() {
         </div>
         <div style={{ display:'flex', gap:10 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search catalog…" style={{ background:'#161b22', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'7px 12px', fontSize:13, color:'#e6edf3', outline:'none', width:200 }} />
-          <button style={{ background:'var(--teal)', color:'#0d1117', border:'none', borderRadius:7, padding:'7px 14px', fontSize:13, fontWeight:600, cursor:'pointer' }}>+ Add item</button>
+          {!readOnly && <button style={{ background:'var(--teal)', color:'#0d1117', border:'none', borderRadius:7, padding:'7px 14px', fontSize:13, fontWeight:600, cursor:'pointer' }}>+ Add item</button>}
         </div>
       </div>
 
@@ -85,12 +87,14 @@ export function CatalogTab() {
                     </span>
                   </td>
                   <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                    <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
-                      <button style={{ background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'3px 10px', fontSize:11, color:'#8b949e', cursor:'pointer' }}>Edit</button>
-                      <button onClick={() => toggleActive(item.id)} style={{ background:'transparent', border:`1px solid ${item.active ? 'rgba(255,107,43,0.2)' : 'rgba(57,211,83,0.2)'}`, borderRadius:5, padding:'3px 10px', fontSize:11, color: item.active ? '#FF6B2B' : '#39D353', cursor:'pointer' }}>
-                        {item.active ? 'Disable' : 'Enable'}
-                      </button>
-                    </div>
+                    {!readOnly && (
+                      <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
+                        <button style={{ background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'3px 10px', fontSize:11, color:'#8b949e', cursor:'pointer' }}>Edit</button>
+                        <button onClick={() => toggleActive(item.id)} style={{ background:'transparent', border:`1px solid ${item.active ? 'rgba(255,107,43,0.2)' : 'rgba(57,211,83,0.2)'}`, borderRadius:5, padding:'3px 10px', fontSize:11, color: item.active ? '#FF6B2B' : '#39D353', cursor:'pointer' }}>
+                          {item.active ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )
