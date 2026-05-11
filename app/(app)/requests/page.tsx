@@ -4,6 +4,7 @@ import { REQUESTS, type TransferRequest, type RequestStatus, type RequestType } 
 import { RequestStatusBadge, PriorityBadge, RequestTypeBadge } from '@/components/requests/RequestBadges'
 import { NewRequestModal } from '@/components/requests/NewRequestModal'
 import { RequestDrawer } from '@/components/requests/RequestDrawer'
+import { usePermissions } from '@/lib/hooks/usePermissions'
 
 const STATUS_TABS: { key: RequestStatus | 'ALL'; label: string }[] = [
   { key:'ALL',       label:'All'       },
@@ -23,6 +24,7 @@ export default function RequestsPage() {
   const [selected, setSelected]   = useState<TransferRequest | null>(null)
   const [showNew, setShowNew]     = useState(false)
   const [toast, setToast]         = useState('')
+  const { permissions: p }        = usePermissions()
 
   const filtered = useMemo(() =>
     requests.filter(r => {
@@ -92,8 +94,10 @@ export default function RequestsPage() {
         </button>
       </div>
 
-      {/* Approval authority info strip */}
+      {/* Approval authority info strip — only show to roles that can approve */}
+      {(p.approveTransfer || p.approvePurchase) && (
       <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+        {p.approveTransfer && (
         <div style={{ flex:1, padding:'10px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:16 }}>↔</span>
           <div>
@@ -102,6 +106,8 @@ export default function RequestsPage() {
           </div>
           {pendingTransfers > 0 && <span style={{ marginLeft:'auto', background:'rgba(59,139,250,0.15)', color:'#3B8BFA', borderRadius:10, padding:'2px 8px', fontWeight:700, fontSize:11 }}>{pendingTransfers} pending</span>}
         </div>
+        )}
+        {p.approvePurchase && (
         <div style={{ flex:1, padding:'10px 14px', background:'rgba(176,107,200,0.06)', border:'1px solid rgba(176,107,200,0.15)', borderRadius:8, fontSize:12, color:'#B06BC8', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:16 }}>🛒</span>
           <div>
@@ -110,7 +116,9 @@ export default function RequestsPage() {
           </div>
           {pendingPurchases > 0 && <span style={{ marginLeft:'auto', background:'rgba(176,107,200,0.15)', color:'#B06BC8', borderRadius:10, padding:'2px 8px', fontWeight:700, fontSize:11 }}>{pendingPurchases} pending</span>}
         </div>
+        )}
       </div>
+      )}
 
       {/* Tabs + type toggle + search */}
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
@@ -198,6 +206,8 @@ export default function RequestsPage() {
                 <td style={{ padding:'12px 16px' }}><PriorityBadge priority={req.priority} /></td>
                 <td style={{ padding:'12px 16px', textAlign:'right' }}>
                   {req.status === 'SUBMITTED' && (
+                    // Only show approve/reject if user has permission for this request type
+                    (req.requestType === 'TRANSFER' ? p.approveTransfer : p.approvePurchase) ? (
                     <div style={{ display:'flex', flexDirection:'column', gap:4, alignItems:'flex-end' }}>
                       <div style={{ fontSize:10, color: req.requestType === 'PURCHASE' ? '#B06BC8' : '#3B8BFA', marginBottom:2 }}>
                         {req.requestType === 'PURCHASE' ? 'Abe approves' : 'Dave approves'}
@@ -207,6 +217,11 @@ export default function RequestsPage() {
                         <button onClick={e => { e.stopPropagation(); handleReject(req.id) }} style={{ background:'transparent', color:'#8b949e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'4px 8px', fontSize:11, cursor:'pointer' }}>✕</button>
                       </div>
                     </div>
+                    ) : (
+                    <span style={{ fontSize:11, color:'#8b949e', fontStyle:'italic' }}>
+                      {req.requestType === 'PURCHASE' ? 'Awaiting Abe' : 'Awaiting Dave'}
+                    </span>
+                    )
                   )}
                 </td>
               </tr>
