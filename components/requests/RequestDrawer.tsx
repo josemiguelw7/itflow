@@ -1,6 +1,6 @@
 'use client'
 import type { TransferRequest } from '@/lib/data/requests'
-import { RequestStatusBadge, PriorityBadge } from './RequestBadges'
+import { RequestStatusBadge, PriorityBadge, RequestTypeBadge } from './RequestBadges'
 
 const WORKFLOW_STEPS: { status: string; label: string }[] = [
   { status: 'SUBMITTED', label: 'Submitted'  },
@@ -44,6 +44,7 @@ export function RequestDrawer({ req, onClose, onApprove, onReject }: {
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             <RequestStatusBadge status={req.status} />
+            <RequestTypeBadge type={req.requestType} />
             <PriorityBadge priority={req.priority} />
             {req.jiraKey && (
               <span style={{ padding:'2px 8px', borderRadius:12, fontSize:11, background:'rgba(59,139,250,0.12)', color:'#3B8BFA' }}>
@@ -117,7 +118,10 @@ export function RequestDrawer({ req, onClose, onApprove, onReject }: {
           {/* Actions */}
           {(canApprove || canReject) && (
             <div>
-              <div style={{ fontSize:11, fontWeight:600, color:'#8b949e', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:10 }}>Actions</div>
+              <div style={{ fontSize:11, fontWeight:600, color:'#8b949e', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Actions</div>
+              <div style={{ fontSize:12, color: req.requestType === 'PURCHASE' ? '#B06BC8' : '#3B8BFA', marginBottom:10 }}>
+                {req.requestType === 'PURCHASE' ? '🛒 Purchase — Abe (Manager) should approve' : '↔ Transfer — Dave (Supervisor) should approve'}
+              </div>
               <div style={{ display:'flex', gap:8 }}>
                 {canApprove && (
                   <button onClick={() => { onApprove(req.id); onClose() }} style={{

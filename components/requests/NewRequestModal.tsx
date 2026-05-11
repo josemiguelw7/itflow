@@ -9,7 +9,7 @@ interface Props {
   preselectedSource?: string
 }
 
-const STEPS = ['Item', 'Route', 'Details', 'Review']
+const STEPS = ['Type', 'Item', 'Route', 'Details', 'Review']
 
 const PRIORITY_OPTS = [
   { value: 'LOW',    label: 'Low',    desc: 'No rush',           color: '#8b949e' },
@@ -19,15 +19,16 @@ const PRIORITY_OPTS = [
 ]
 
 export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselectedSource }: Props) {
-  const [step, setStep]         = useState(preselectedItem ? 1 : 0)
-  const [item, setItem]         = useState(preselectedItem ?? ITEMS_LIST[0])
-  const [quantity, setQuantity] = useState(1)
-  const [source, setSource]     = useState(preselectedSource ?? SITES_LIST[0])
-  const [dest, setDest]         = useState(SITES_LIST.find(s => s !== (preselectedSource ?? SITES_LIST[0])) ?? SITES_LIST[1])
-  const [priority, setPriority] = useState('NORMAL')
-  const [neededBy, setNeededBy] = useState('')
-  const [jiraKey, setJiraKey]   = useState('')
-  const [notes, setNotes]       = useState('')
+  const [step, setStep]             = useState(preselectedItem ? 2 : 0)
+  const [requestType, setRequestType] = useState<'TRANSFER' | 'PURCHASE'>('TRANSFER')
+  const [item, setItem]             = useState(preselectedItem ?? ITEMS_LIST[0])
+  const [quantity, setQuantity]     = useState(1)
+  const [source, setSource]         = useState(preselectedSource ?? SITES_LIST[0])
+  const [dest, setDest]             = useState(SITES_LIST.find(s => s !== (preselectedSource ?? SITES_LIST[0])) ?? SITES_LIST[1])
+  const [priority, setPriority]     = useState('NORMAL')
+  const [neededBy, setNeededBy]     = useState('')
+  const [jiraKey, setJiraKey]       = useState('')
+  const [notes, setNotes]           = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   function next() { if (step < STEPS.length - 1) setStep(s => s + 1) }
@@ -36,12 +37,12 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
   async function handleSubmit() {
     setSubmitting(true)
     await new Promise(r => setTimeout(r, 800))
-    onSubmit({ item, quantity, source, dest, priority, neededBy, jiraKey, notes })
+    onSubmit({ requestType, item, quantity, source: requestType === 'PURCHASE' ? 'Vendor' : source, dest, priority, neededBy, jiraKey, notes })
     setSubmitting(false)
     onClose()
   }
 
-  const canNext = step === 0 ? true : step === 1 ? source !== dest : true
+  const canNext = step === 2 && requestType === 'TRANSFER' ? source !== dest : true
 
   return (
     <>
@@ -49,7 +50,7 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
       <div style={{
         position:'fixed', top:'50%', left:'50%',
         transform:'translate(-50%,-50%)',
-        width: 540, background:'#161b22',
+        width:540, background:'#161b22',
         border:'1px solid rgba(255,255,255,0.1)',
         borderRadius:14, zIndex:301,
         display:'flex', flexDirection:'column',
@@ -59,7 +60,7 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
         <div style={{ padding:'22px 28px 0' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
             <div>
-              <div style={{ fontWeight:600, fontSize:16 }}>New transfer request</div>
+              <div style={{ fontWeight:600, fontSize:16 }}>New request</div>
               <div style={{ fontSize:12, color:'#8b949e', marginTop:2 }}>Step {step+1} of {STEPS.length} — {STEPS[step]}</div>
             </div>
             <button onClick={onClose} style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:6, width:28, height:28, color:'#8b949e', cursor:'pointer', fontSize:16 }}>✕</button>
@@ -89,10 +90,46 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
         {/* Body */}
         <div style={{ padding:'0 28px', overflowY:'auto', flex:1 }}>
 
-          {/* Step 0: Item */}
+          {/* Step 0: Request type */}
           {step === 0 && (
             <div>
-              <div style={{ fontSize:12, color:'#8b949e', marginBottom:12 }}>Select the item you need</div>
+              <div style={{ fontSize:12, color:'#8b949e', marginBottom:16 }}>What kind of request is this?</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16 }}>
+                <button onClick={() => setRequestType('TRANSFER')} style={{
+                  padding:'16px 18px', borderRadius:10, cursor:'pointer', textAlign:'left',
+                  background: requestType === 'TRANSFER' ? 'rgba(59,139,250,0.1)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${requestType === 'TRANSFER' ? 'rgba(59,139,250,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                    <span style={{ fontSize:20 }}>↔</span>
+                    <div style={{ fontWeight:600, fontSize:14, color: requestType === 'TRANSFER' ? '#3B8BFA' : '#e6edf3' }}>Transfer existing inventory</div>
+                    <span style={{ marginLeft:'auto', fontSize:10, fontWeight:700, padding:'2px 7px', borderRadius:4, background:'rgba(59,139,250,0.12)', color:'#3B8BFA' }}>SUPERVISOR APPROVES</span>
+                  </div>
+                  <div style={{ fontSize:12, color:'#8b949e', paddingLeft:30 }}>Move an item that already exists in ITFlow from one site to another. Dave (Supervisor) reviews and approves.</div>
+                </button>
+
+                <button onClick={() => setRequestType('PURCHASE')} style={{
+                  padding:'16px 18px', borderRadius:10, cursor:'pointer', textAlign:'left',
+                  background: requestType === 'PURCHASE' ? 'rgba(176,107,200,0.1)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${requestType === 'PURCHASE' ? 'rgba(176,107,200,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                    <span style={{ fontSize:20 }}>🛒</span>
+                    <div style={{ fontWeight:600, fontSize:14, color: requestType === 'PURCHASE' ? '#B06BC8' : '#e6edf3' }}>New purchase</div>
+                    <span style={{ marginLeft:'auto', fontSize:10, fontWeight:700, padding:'2px 7px', borderRadius:4, background:'rgba(176,107,200,0.12)', color:'#B06BC8' }}>MANAGER APPROVES</span>
+                  </div>
+                  <div style={{ fontSize:12, color:'#8b949e', paddingLeft:30 }}>Request new equipment to be purchased from a vendor. Abe (Manager) reviews budget and approves procurement.</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 1: Item */}
+          {step === 1 && (
+            <div>
+              <div style={{ fontSize:12, color:'#8b949e', marginBottom:12 }}>
+                {requestType === 'TRANSFER' ? 'Select the item to transfer' : 'Select the item to purchase'}
+              </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:16 }}>
                 {ITEMS_LIST.map(it => (
                   <button key={it.id} onClick={() => setItem(it)} style={{
@@ -122,29 +159,42 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
             </div>
           )}
 
-          {/* Step 1: Route */}
-          {step === 1 && (
+          {/* Step 2: Route */}
+          {step === 2 && (
             <div>
-              <div style={{ fontSize:12, color:'#8b949e', marginBottom:16 }}>Where should the item come from and go to?</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center', marginBottom:8 }}>
-                <div>
-                  <Label>Source site</Label>
-                  <SiteSelect value={source} onChange={setSource} exclude={dest} />
-                </div>
-                <div style={{ color:'#8b949e', fontSize:18, marginTop:20 }}>→</div>
-                <div>
-                  <Label>Destination site</Label>
-                  <SiteSelect value={dest} onChange={setDest} exclude={source} />
-                </div>
-              </div>
-              {source === dest && (
-                <div style={{ fontSize:12, color:'#FF6B2B', marginTop:6 }}>Source and destination must be different</div>
+              {requestType === 'TRANSFER' ? (
+                <>
+                  <div style={{ fontSize:12, color:'#8b949e', marginBottom:16 }}>Where should the item come from and go to?</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center', marginBottom:8 }}>
+                    <div>
+                      <Label>Source site</Label>
+                      <SiteSelect value={source} onChange={setSource} exclude={dest} />
+                    </div>
+                    <div style={{ color:'#8b949e', fontSize:18, marginTop:20 }}>→</div>
+                    <div>
+                      <Label>Destination site</Label>
+                      <SiteSelect value={dest} onChange={setDest} exclude={source} />
+                    </div>
+                  </div>
+                  {source === dest && <div style={{ fontSize:12, color:'#FF6B2B', marginTop:6 }}>Source and destination must be different</div>}
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize:12, color:'#8b949e', marginBottom:16 }}>Where should the new equipment be delivered?</div>
+                  <div style={{ marginBottom:16 }}>
+                    <Label>Deliver to site</Label>
+                    <SiteSelect value={dest} onChange={setDest} />
+                  </div>
+                  <div style={{ background:'rgba(176,107,200,0.06)', border:'1px solid rgba(176,107,200,0.2)', borderRadius:8, padding:'10px 14px', fontSize:12, color:'#B06BC8' }}>
+                    🛒 This is a new purchase from a vendor. Abe (Manager) will review the budget and approve procurement.
+                  </div>
+                </>
               )}
             </div>
           )}
 
-          {/* Step 2: Details */}
-          {step === 2 && (
+          {/* Step 3: Details */}
+          {step === 3 && (
             <div>
               <div style={{ marginBottom:14 }}>
                 <Label>Priority</Label>
@@ -176,36 +226,37 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
             </div>
           )}
 
-          {/* Step 3: Review */}
-          {step === 3 && (
+          {/* Step 4: Review */}
+          {step === 4 && (
             <div style={{ marginBottom:8 }}>
               <div style={{ fontSize:12, color:'#8b949e', marginBottom:14 }}>Review your request before submitting</div>
               <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:9, overflow:'hidden', marginBottom:16 }}>
                 {[
+                  ['Type',        requestType === 'TRANSFER' ? '↔ Transfer' : '🛒 New purchase'],
                   ['Item',        `${item.icon} ${item.name}`],
                   ['Quantity',    item.type === 'QUANTITY' ? String(quantity) : '1 (serialized)'],
-                  ['From',        source],
+                  ['From',        requestType === 'PURCHASE' ? 'Vendor' : source],
                   ['To',          dest],
                   ['Priority',    priority],
                   ['Needed by',   neededBy || '—'],
                   ['Jira ticket', jiraKey  || '—'],
                   ['Notes',       notes    || '—'],
                 ].map(([label, val], i) => (
-                  <div key={label} style={{
-                    display:'flex', justifyContent:'space-between', alignItems:'center',
-                    padding:'9px 14px', fontSize:13,
-                    borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  }}>
+                  <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'9px 14px', fontSize:13, borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                     <span style={{ color:'#8b949e' }}>{label}</span>
                     <span style={{ fontWeight: label === 'Priority' ? 600 : 400 }}>{val}</span>
                   </div>
                 ))}
               </div>
               <div style={{
-                background:'rgba(42,191,160,0.06)', border:'1px solid rgba(42,191,160,0.2)',
-                borderRadius:8, padding:'10px 14px', fontSize:12, color:'#8b949e',
+                background: requestType === 'PURCHASE' ? 'rgba(176,107,200,0.06)' : 'rgba(42,191,160,0.06)',
+                border: `1px solid ${requestType === 'PURCHASE' ? 'rgba(176,107,200,0.2)' : 'rgba(42,191,160,0.2)'}`,
+                borderRadius:8, padding:'10px 14px', fontSize:12,
+                color: requestType === 'PURCHASE' ? '#B06BC8' : '#8b949e',
               }}>
-                📋 A Jira ticket will be created automatically. The source site manager will receive a Slack notification to approve.
+                {requestType === 'PURCHASE'
+                  ? '🛒 Purchase request — Abe (Manager) will be notified to review and approve budget.'
+                  : '↔ Transfer request — Dave (Supervisor) will be notified to approve. A Jira ticket will be created automatically.'}
               </div>
             </div>
           )}
@@ -213,11 +264,7 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
 
         {/* Footer */}
         <div style={{ padding:'18px 28px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', justifyContent:'space-between', gap:10 }}>
-          <button onClick={step === 0 ? onClose : back} style={{
-            padding:'8px 18px', borderRadius:7, fontSize:13,
-            background:'transparent', color:'#8b949e',
-            border:'1px solid rgba(255,255,255,0.1)', cursor:'pointer',
-          }}>
+          <button onClick={step === 0 ? onClose : back} style={{ padding:'8px 18px', borderRadius:7, fontSize:13, background:'transparent', color:'#8b949e', border:'1px solid rgba(255,255,255,0.1)', cursor:'pointer' }}>
             {step === 0 ? 'Cancel' : '← Back'}
           </button>
           <button
@@ -243,7 +290,7 @@ function Label({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize:11, fontWeight:600, color:'#8b949e', textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:6 }}>{children}</div>
 }
 
-function SiteSelect({ value, onChange, exclude }: { value: string; onChange: (v: string) => void; exclude: string }) {
+function SiteSelect({ value, onChange, exclude }: { value: string; onChange: (v: string) => void; exclude?: string }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)} style={{ ...inputStyle, cursor:'pointer' }}>
       {SITES_LIST.filter(s => s !== exclude).map(s => <option key={s} value={s}>{s}</option>)}
@@ -251,15 +298,5 @@ function SiteSelect({ value, onChange, exclude }: { value: string; onChange: (v:
   )
 }
 
-const qBtn: React.CSSProperties = {
-  width:32, height:32, borderRadius:6, border:'1px solid rgba(255,255,255,0.1)',
-  background:'rgba(255,255,255,0.04)', color:'#e6edf3', fontSize:18, cursor:'pointer',
-  display:'flex', alignItems:'center', justifyContent:'center',
-}
-
-const inputStyle: React.CSSProperties = {
-  width:'100%', background:'#0d1117',
-  border:'1px solid rgba(255,255,255,0.1)',
-  borderRadius:7, padding:'8px 12px', fontSize:13,
-  color:'#e6edf3', outline:'none',
-}
+const qBtn: React.CSSProperties = { width:32, height:32, borderRadius:6, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#e6edf3', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }
+const inputStyle: React.CSSProperties = { width:'100%', background:'#0d1117', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'8px 12px', fontSize:13, color:'#e6edf3', outline:'none' }

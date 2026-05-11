@@ -1,4 +1,4 @@
-import type { RequestStatus, RequestPriority } from '@/lib/data/requests'
+import type { RequestStatus, RequestPriority, RequestType } from '@/lib/data/requests'
 
 export const STATUS_MAP: Record<RequestStatus, { label: string; color: string; bg: string }> = {
   SUBMITTED: { label: 'Submitted', color: '#3B8BFA', bg: 'rgba(59,139,250,0.12)'  },
@@ -15,6 +15,11 @@ export const PRIORITY_MAP: Record<RequestPriority, { label: string; color: strin
   NORMAL: { label: 'Normal', color: '#8b949e', bg: 'rgba(255,255,255,0.06)'  },
   HIGH:   { label: 'High',   color: '#F5A623', bg: 'rgba(245,166,35,0.12)'  },
   URGENT: { label: 'Urgent', color: '#FF6B2B', bg: 'rgba(255,107,43,0.12)'  },
+}
+
+export const TYPE_MAP: Record<RequestType, { label: string; color: string; bg: string; approver: string }> = {
+  TRANSFER: { label: 'Transfer',  color: '#3B8BFA', bg: 'rgba(59,139,250,0.1)',  approver: 'Supervisor' },
+  PURCHASE: { label: 'Purchase',  color: '#B06BC8', bg: 'rgba(176,107,200,0.1)', approver: 'Manager'    },
 }
 
 export function RequestStatusBadge({ status }: { status: RequestStatus }) {
@@ -41,6 +46,20 @@ export function PriorityBadge({ priority }: { priority: RequestPriority }) {
       color: p.color, background: p.bg,
     }}>
       {p.label.toUpperCase()}
+    </span>
+  )
+}
+
+export function RequestTypeBadge({ type }: { type: RequestType }) {
+  const t = TYPE_MAP[type]
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '2px 8px', borderRadius: 4,
+      fontSize: 10, fontWeight: 700, letterSpacing: '0.3px',
+      color: t.color, background: t.bg,
+    }}>
+      {type === 'TRANSFER' ? '↔' : '🛒'} {t.label.toUpperCase()}
     </span>
   )
 }
