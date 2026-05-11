@@ -19,20 +19,29 @@ const PRIORITY_OPTS = [
 ]
 
 export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselectedSource }: Props) {
-  const [step, setStep]             = useState(preselectedItem ? 2 : 0)
+  const [step, setStep]               = useState(0)  // always start at Type step
   const [requestType, setRequestType] = useState<'TRANSFER' | 'PURCHASE'>('TRANSFER')
-  const [item, setItem]             = useState(preselectedItem ?? ITEMS_LIST[0])
-  const [quantity, setQuantity]     = useState(1)
-  const [source, setSource]         = useState(preselectedSource ?? SITES_LIST[0])
-  const [dest, setDest]             = useState(SITES_LIST.find(s => s !== (preselectedSource ?? SITES_LIST[0])) ?? SITES_LIST[1])
-  const [priority, setPriority]     = useState('NORMAL')
-  const [neededBy, setNeededBy]     = useState('')
-  const [jiraKey, setJiraKey]       = useState('')
-  const [notes, setNotes]           = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [item, setItem]               = useState(preselectedItem ?? ITEMS_LIST[0])
+  const [quantity, setQuantity]       = useState(1)
+  const [source, setSource]           = useState(preselectedSource ?? SITES_LIST[0])
+  const [dest, setDest]               = useState(SITES_LIST.find(s => s !== (preselectedSource ?? SITES_LIST[0])) ?? SITES_LIST[1])
+  const [priority, setPriority]       = useState('NORMAL')
+  const [neededBy, setNeededBy]       = useState('')
+  const [jiraKey, setJiraKey]         = useState('')
+  const [notes, setNotes]             = useState('')
+  const [submitting, setSubmitting]   = useState(false)
 
-  function next() { if (step < STEPS.length - 1) setStep(s => s + 1) }
-  function back() { if (step > 0) setStep(s => s - 1) }
+  function next() {
+    // When item is preselected, skip the Item step (step 1)
+    if (preselectedItem && step === 0) { setStep(2); return }
+    if (step < STEPS.length - 1) setStep(s => s + 1)
+  }
+
+  function back() {
+    // When item is preselected, skip back over the Item step
+    if (preselectedItem && step === 2) { setStep(0); return }
+    if (step > 0) setStep(s => s - 1)
+  }
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -61,7 +70,13 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
             <div>
               <div style={{ fontWeight:600, fontSize:16 }}>New request</div>
-              <div style={{ fontSize:12, color:'#8b949e', marginTop:2 }}>Step {step+1} of {STEPS.length} — {STEPS[step]}</div>
+              <div style={{ fontSize:12, color:'#8b949e', marginTop:2 }}>
+                {preselectedItem && step === 0 && `Step 1 of 4 — Type`}
+                {preselectedItem && step === 2 && `Step 2 of 4 — Route · ${item.icon} ${item.name}`}
+                {preselectedItem && step === 3 && `Step 3 of 4 — Details`}
+                {preselectedItem && step === 4 && `Step 4 of 4 — Review`}
+                {!preselectedItem && `Step ${step+1} of ${STEPS.length} — ${STEPS[step]}`}
+              </div>
             </div>
             <button onClick={onClose} style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:6, width:28, height:28, color:'#8b949e', cursor:'pointer', fontSize:16 }}>✕</button>
           </div>
@@ -162,6 +177,19 @@ export function NewRequestModal({ onClose, onSubmit, preselectedItem, preselecte
           {/* Step 2: Route */}
           {step === 2 && (
             <div>
+              {/* Show pre-selected item as confirmed banner */}
+              {preselectedItem && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(42,191,160,0.08)', border:'1px solid rgba(42,191,160,0.2)', borderRadius:8, marginBottom:16 }}>
+                  <span style={{ fontSize:20 }}>{preselectedItem.icon}</span>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:'var(--teal)' }}>{preselectedItem.name}</div>
+                    <div style={{ fontSize:11, color:'#8b949e' }}>Item confirmed from inventory</div>
+                  </div>
+                  <span style={{ marginLeft:'auto', fontSize:10, fontWeight:700, padding:'2px 7px', borderRadius:4, background: requestType === 'TRANSFER' ? 'rgba(59,139,250,0.12)' : 'rgba(176,107,200,0.12)', color: requestType === 'TRANSFER' ? '#3B8BFA' : '#B06BC8' }}>
+                    {requestType === 'TRANSFER' ? '↔ TRANSFER' : '🛒 PURCHASE'}
+                  </span>
+                </div>
+              )}
               {requestType === 'TRANSFER' ? (
                 <>
                   <div style={{ fontSize:12, color:'#8b949e', marginBottom:16 }}>Where should the item come from and go to?</div>
