@@ -1,148 +1,170 @@
 // lib/permissions.ts
-// Single source of truth for role-based access control
-// Import this anywhere in the app to check permissions
+// Single source of truth for all role-based access control
+// Every UI component and page reads from here
 
-export type UserRole = 'TECHNICIAN' | 'SITE_MANAGER' | 'REGIONAL_MANAGER' | 'ADMIN'
+export type Role = 'TECHNICIAN' | 'SITE_MANAGER' | 'REGIONAL_MANAGER' | 'ADMIN'
 
-export interface Permission {
-  // Requests
-  canSubmitRequest:      boolean
-  canApproveTransfer:    boolean  // Dave (Supervisor) and up
-  canApprovePurchase:    boolean  // Abe (Manager) and up
-  canRejectRequest:      boolean
+export interface Permissions {
   // Inventory
-  canViewInventory:      boolean
-  canEditAsset:          boolean  // Technician and up — no create/delete
-  canCreateAsset:        boolean  // Admin only
-  canDeleteAsset:        boolean  // Admin only
+  viewInventory:        boolean
+  editAsset:            boolean   // edit details, condition, notes
+  createAsset:          boolean   // add new asset to catalog
+  deleteAsset:          boolean   // retire/remove asset
+
+  // Requests
+  submitRequest:        boolean   // submit transfer or purchase
+  approveTransfer:      boolean   // approve TRANSFER type requests
+  approvePurchase:      boolean   // approve PURCHASE type requests
+  rejectRequest:        boolean   // reject any request
+
   // Shipments
-  canCreateShipment:     boolean
-  canMarkShipped:        boolean
-  canMarkReceived:       boolean
-  canFlagException:      boolean
-  // Reports — read only for all
-  canViewReports:        boolean
-  // Admin panel
-  canViewCatalog:        boolean  // Dave, Abe, Admin
-  canEditCatalog:        boolean  // Admin only
-  canViewUsers:          boolean  // Admin only
-  canEditUsers:          boolean  // Admin only
-  canViewLocations:      boolean  // Dave, Abe, Admin
-  canEditLocations:      boolean  // Admin only
-  canViewIntegrations:   boolean  // Admin only
-  canEditIntegrations:   boolean  // Admin only
+  createShipment:       boolean
+  markShipped:          boolean
+  markReceived:         boolean
+  flagException:        boolean
+
+  // Reports
+  viewReports:          boolean   // read-only for lower roles
+
+  // Admin — Users
+  viewUsers:            boolean
+  manageUsers:          boolean   // add, edit, deactivate users
+
+  // Admin — Locations
+  viewLocations:        boolean
+  manageLocations:      boolean   // add, edit, deactivate sites
+
+  // Admin — Catalog
+  viewCatalog:          boolean
+  manageCatalog:        boolean   // add, edit, disable catalog items
+
+  // Admin — Integrations
+  manageIntegrations:   boolean   // Jira, Slack, Okta config
 }
 
-export const PERMISSIONS: Record<UserRole, Permission> = {
-  TECHNICIAN: {
-    canSubmitRequest:    true,
-    canApproveTransfer:  false,
-    canApprovePurchase:  false,
-    canRejectRequest:    false,
-    canViewInventory:    true,
-    canEditAsset:        true,
-    canCreateAsset:      false,
-    canDeleteAsset:      false,
-    canCreateShipment:   true,
-    canMarkShipped:      true,
-    canMarkReceived:     true,
-    canFlagException:    true,
-    canViewReports:      true,   // read-only
-    canViewCatalog:      false,
-    canEditCatalog:      false,
-    canViewUsers:        false,
-    canEditUsers:        false,
-    canViewLocations:    false,
-    canEditLocations:    false,
-    canViewIntegrations: false,
-    canEditIntegrations: false,
-  },
-  SITE_MANAGER: {
-    canSubmitRequest:    true,
-    canApproveTransfer:  true,
-    canApprovePurchase:  false,
-    canRejectRequest:    true,
-    canViewInventory:    true,
-    canEditAsset:        true,
-    canCreateAsset:      false,
-    canDeleteAsset:      false,
-    canCreateShipment:   true,
-    canMarkShipped:      true,
-    canMarkReceived:     true,
-    canFlagException:    true,
-    canViewReports:      true,
-    canViewCatalog:      true,   // read-only
-    canEditCatalog:      false,
-    canViewUsers:        false,
-    canEditUsers:        false,
-    canViewLocations:    true,   // read-only
-    canEditLocations:    false,
-    canViewIntegrations: false,
-    canEditIntegrations: false,
-  },
-  REGIONAL_MANAGER: {
-    canSubmitRequest:    true,
-    canApproveTransfer:  true,
-    canApprovePurchase:  true,
-    canRejectRequest:    true,
-    canViewInventory:    true,
-    canEditAsset:        true,
-    canCreateAsset:      false,
-    canDeleteAsset:      false,
-    canCreateShipment:   true,
-    canMarkShipped:      true,
-    canMarkReceived:     true,
-    canFlagException:    true,
-    canViewReports:      true,
-    canViewCatalog:      true,   // read-only
-    canEditCatalog:      false,
-    canViewUsers:        false,
-    canEditUsers:        false,
-    canViewLocations:    true,   // read-only
-    canEditLocations:    false,
-    canViewIntegrations: false,
-    canEditIntegrations: false,
-  },
-  ADMIN: {
-    canSubmitRequest:    true,
-    canApproveTransfer:  true,
-    canApprovePurchase:  true,
-    canRejectRequest:    true,
-    canViewInventory:    true,
-    canEditAsset:        true,
-    canCreateAsset:      true,
-    canDeleteAsset:      true,
-    canCreateShipment:   true,
-    canMarkShipped:      true,
-    canMarkReceived:     true,
-    canFlagException:    true,
-    canViewReports:      true,
-    canViewCatalog:      true,
-    canEditCatalog:      true,
-    canViewUsers:        true,
-    canEditUsers:        true,
-    canViewLocations:    true,
-    canEditLocations:    true,
-    canViewIntegrations: true,
-    canEditIntegrations: true,
-  },
+const TECHNICIAN: Permissions = {
+  viewInventory:      true,
+  editAsset:          true,
+  createAsset:        false,
+  deleteAsset:        false,
+
+  submitRequest:      true,
+  approveTransfer:    false,
+  approvePurchase:    false,
+  rejectRequest:      false,
+
+  createShipment:     true,
+  markShipped:        true,
+  markReceived:       true,
+  flagException:      true,
+
+  viewReports:        true,   // read-only
+
+  viewUsers:          false,
+  manageUsers:        false,
+  viewLocations:      false,
+  manageLocations:    false,
+  viewCatalog:        false,
+  manageCatalog:      false,
+  manageIntegrations: false,
 }
 
-export function getPermissions(role: UserRole): Permission {
-  return PERMISSIONS[role]
+const SITE_MANAGER: Permissions = {
+  viewInventory:      true,
+  editAsset:          true,
+  createAsset:        false,
+  deleteAsset:        false,
+
+  submitRequest:      true,
+  approveTransfer:    true,   // Dave approves transfers
+  approvePurchase:    false,
+  rejectRequest:      true,
+
+  createShipment:     true,
+  markShipped:        true,
+  markReceived:       true,
+  flagException:      true,
+
+  viewReports:        true,
+
+  viewUsers:          true,
+  manageUsers:        true,
+  viewLocations:      true,
+  manageLocations:    true,
+  viewCatalog:        true,
+  manageCatalog:      true,   // read + edit catalog
+  manageIntegrations: false,
 }
 
-// Role lookup from demo email
-export const ROLE_BY_EMAIL: Record<string, UserRole> = {
-  'tech@itflow-demo.com':     'TECHNICIAN',
-  'manager@itflow-demo.com':  'SITE_MANAGER',
-  'regional@itflow-demo.com': 'REGIONAL_MANAGER',
-  'admin@itflow-demo.com':    'ADMIN',
+const REGIONAL_MANAGER: Permissions = {
+  viewInventory:      true,
+  editAsset:          true,
+  createAsset:        false,
+  deleteAsset:        false,
+
+  submitRequest:      true,
+  approveTransfer:    true,
+  approvePurchase:    true,   // Abe approves purchases
+  rejectRequest:      true,
+
+  createShipment:     true,
+  markShipped:        true,
+  markReceived:       true,
+  flagException:      true,
+
+  viewReports:        true,
+
+  viewUsers:          true,
+  manageUsers:        true,
+  viewLocations:      true,
+  manageLocations:    true,
+  viewCatalog:        true,
+  manageCatalog:      true,
+  manageIntegrations: false,
 }
 
-export const ROLE_LABELS: Record<UserRole, string> = {
-  TECHNICIAN:       'Technician',
-  SITE_MANAGER:     'Supervisor',
-  REGIONAL_MANAGER: 'Manager',
-  ADMIN:            'Admin',
+const ADMIN: Permissions = {
+  viewInventory:      true,
+  editAsset:          true,
+  createAsset:        true,
+  deleteAsset:        true,
+
+  submitRequest:      true,
+  approveTransfer:    true,
+  approvePurchase:    true,
+  rejectRequest:      true,
+
+  createShipment:     true,
+  markShipped:        true,
+  markReceived:       true,
+  flagException:      true,
+
+  viewReports:        true,
+
+  viewUsers:          true,
+  manageUsers:        true,
+  viewLocations:      true,
+  manageLocations:    true,
+  viewCatalog:        true,
+  manageCatalog:      true,
+  manageIntegrations: true,
+}
+
+export const ROLE_PERMISSIONS: Record<Role, Permissions> = {
+  TECHNICIAN:       TECHNICIAN,
+  SITE_MANAGER:     SITE_MANAGER,
+  REGIONAL_MANAGER: REGIONAL_MANAGER,
+  ADMIN:            ADMIN,
+}
+
+export function getPermissions(role: string): Permissions {
+  return ROLE_PERMISSIONS[role as Role] ?? TECHNICIAN
+}
+
+// Role display info
+export const ROLE_META: Record<Role, { label: string; color: string; name: string }> = {
+  TECHNICIAN:       { label: 'Technician', color: '#8b949e', name: 'Alex Rivera' },
+  SITE_MANAGER:     { label: 'Supervisor', color: '#3B8BFA', name: 'Dave'        },
+  REGIONAL_MANAGER: { label: 'Manager',    color: '#2ABFA0', name: 'Abe'         },
+  ADMIN:            { label: 'Admin',      color: '#E8407A', name: 'Morgan Chen' },
 }

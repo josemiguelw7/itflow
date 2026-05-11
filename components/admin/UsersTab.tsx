@@ -2,14 +2,14 @@
 import { useState } from 'react'
 import { ADMIN_USERS, ROLE_LABELS, ROLE_COLORS, type AdminUser } from '@/lib/data/admin'
 
-export function UsersTab({ readOnly = false }: { readOnly?: boolean }) {
+export function UsersTab({ canManage = true }: { canManage?: boolean }) {
   const [users, setUsers]   = useState<AdminUser[]>(ADMIN_USERS)
   const [search, setSearch] = useState('')
   const [toast, setToast]   = useState('')
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
-  function toggleActive(id: string) { if (readOnly) return; setUsers(p => p.map(u => u.id===id ? {...u, active:!u.active} : u)); showToast('User updated') }
-  function changeRole(id: string, role: AdminUser['role']) { if (readOnly) return; setUsers(p => p.map(u => u.id===id ? {...u, role} : u)); showToast('Role updated') }
+  function toggleActive(id: string) { if (!canManage) return; setUsers(p => p.map(u => u.id===id ? {...u, active:!u.active} : u)); showToast('User updated') }
+  function changeRole(id: string, role: AdminUser['role']) { if (!canManage) return; setUsers(p => p.map(u => u.id===id ? {...u, role} : u)); showToast('Role updated') }
 
   const filtered = users.filter(u => !search ||
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -18,13 +18,13 @@ export function UsersTab({ readOnly = false }: { readOnly?: boolean }) {
   return (
     <div>
       {toast && <Toast msg={toast} />}
-      {readOnly && <ReadOnlyBanner text="You have read-only access to users. Contact Admin to make changes." />}
+      {!canManage && <ReadOnlyBanner text="You have read-only access to users. Contact Admin to make changes." />}
 
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <div style={{ fontSize:13, color:'#8b949e' }}>{users.length} users · {users.filter(u=>u.active).length} active</div>
         <div style={{ display:'flex', gap:10 }}>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users…" style={inputSt} />
-          {!readOnly && <button style={addBtn}>+ Invite user</button>}
+          {canManage && <button style={addBtn}>+ Invite user</button>}
         </div>
       </div>
 
@@ -32,7 +32,7 @@ export function UsersTab({ readOnly = false }: { readOnly?: boolean }) {
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
           <thead>
             <tr style={{ borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-              {['User','Site','Role','Orgs','Last login','Status', !readOnly ? '' : ''].map((h,i) => (
+              {['User','Site','Role','Orgs','Last login','Status', canManage ? '' : ''].map((h,i) => (
                 <th key={i} style={thSt}>{h}</th>
               ))}
             </tr>

@@ -2,13 +2,13 @@
 import { useState } from 'react'
 import { ADMIN_LOCATIONS, type AdminLocation } from '@/lib/data/admin'
 
-export function LocationsTab({ readOnly = false }: { readOnly?: boolean }) {
+export function LocationsTab({ canManage = true }: { canManage?: boolean }) {
   const [locs, setLocs] = useState<AdminLocation[]>(ADMIN_LOCATIONS)
   const [toast, setToast] = useState('')
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
   function toggleActive(id: string) {
-    if (readOnly) return
+    if (!canManage) return
     setLocs(prev => prev.map(l => l.id === id ? { ...l, active: !l.active } : l))
     showToast('Location updated')
   }
@@ -17,10 +17,10 @@ export function LocationsTab({ readOnly = false }: { readOnly?: boolean }) {
     <div>
       {toast && <div style={{ position:'fixed', bottom:24, right:24, zIndex:500, background:'#161b22', border:'1px solid rgba(42,191,160,0.3)', borderRadius:9, padding:'12px 18px', fontSize:13, color:'var(--teal)' }}>{toast}</div>}
 
-      {readOnly && <div style={{ marginBottom:14, padding:'9px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>🔒 Read-only — contact Admin to add or deactivate locations</div>}
+      {!canManage && <div style={{ marginBottom:14, padding:'9px 14px', background:'rgba(59,139,250,0.06)', border:'1px solid rgba(59,139,250,0.15)', borderRadius:8, fontSize:12, color:'#3B8BFA', display:'flex', alignItems:'center', gap:8 }}>🔒 Read-only — contact Admin to add or deactivate locations</div>}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
         <div style={{ fontSize:13, color:'#8b949e' }}>{locs.length} sites · {locs.filter(l=>l.active).length} active</div>
-        {!readOnly && <button style={{ background:'var(--teal)', color:'#0d1117', border:'none', borderRadius:7, padding:'7px 14px', fontSize:13, fontWeight:600, cursor:'pointer' }}>+ Add site</button>}
+        {canManage && <button style={{ background:'var(--teal)', color:'#0d1117', border:'none', borderRadius:7, padding:'7px 14px', fontSize:13, fontWeight:600, cursor:'pointer' }}>+ Add site</button>}
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(320px,1fr))', gap:12 }}>

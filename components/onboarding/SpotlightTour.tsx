@@ -1,113 +1,106 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { usePermissions } from '@/lib/hooks/usePermissions'
-import { ROLE_LABELS } from '@/lib/permissions'
+import { useState, useEffect, useRef } from 'react'
+import type { Role } from '@/lib/permissions'
 
 interface TourStep {
   id:       string
   selector: string
   title:    string
   body:     string
-  roles:    string[]   // which roles see this step
-  tip?:     string     // role-specific tip line
+  roles:    Role[]   // which roles see this step
+  tip?:     string   // extra tip shown in teal
 }
 
 const ALL_STEPS: TourStep[] = [
   {
-    id: 'dashboard',
+    id: 'dashboard-metrics',
     selector: '[data-tour="dashboard"]',
-    title: 'Dashboard',
-    body: 'Your command center. Four live metrics at the top, site health bars below, and your approval queue on the right.',
+    title: 'Dashboard — your command center',
+    body: 'Four live metrics at the top: total assets across all sites, available inventory right now, requests needing attention, and items in transit.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
   },
   {
     id: 'site-health',
     selector: '[data-tour="site-health"]',
-    title: 'Site health',
-    body: 'Each bar shows available inventory at that location. Green is healthy, amber is getting low, red needs attention.',
+    title: 'Multi-site stock health',
+    body: 'Each bar shows inventory health per location. Green is healthy, amber is getting low, red needs action. Denver and Miami are flagged right now.',
     roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    tip: 'Click any site bar to jump to that location\'s inventory',
   },
   {
     id: 'approval-queue',
     selector: '[data-tour="approval-queue"]',
     title: 'Approval queue',
-    body: 'Requests waiting for action appear here. Transfer requests go to Supervisors — purchase requests go to Managers.',
+    body: 'Transfer requests are approved by you (Supervisor). Purchase requests — new equipment from vendors — go to the Manager for budget approval.',
     roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    tip: 'Approve or reject with one click, right here',
   },
   {
     id: 'inventory',
     selector: '[data-tour="inventory"]',
     title: 'Inventory',
-    body: 'Every asset and stock item across all sites. Filter by site, category, or status. Toggle between serialized assets and quantity stock.',
+    body: 'Every asset and stock item across all eight sites. Filter by site, category, or status. Toggle between serialized assets (tracked by serial number) and quantity stock like chargers and cables.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
   },
   {
     id: 'request-transfer',
     selector: '[data-tour="requests"]',
-    title: 'Requests',
-    body: 'Submit a transfer (moving existing inventory) or a purchase (new equipment from a vendor). Each goes to the right approver automatically.',
+    title: 'Requesting a transfer',
+    body: 'Find an item in inventory, click it, and hit Request Transfer. The form asks if it\'s a transfer of existing stock or a new purchase — that determines who approves it.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    tip: 'Transfers → Supervisor approves  ·  Purchases → Manager approves',
   },
   {
-    id: 'approve-transfer',
+    id: 'requests-page',
     selector: '[data-tour="requests"]',
-    title: 'Transfer approvals',
-    body: 'Transfer requests land in your queue. Review the route, check stock levels, and approve or reject with one click. Requester is notified automatically.',
-    roles: ['SITE_MANAGER','ADMIN'],
-    tip: '',
-  },
-  {
-    id: 'approve-purchase',
-    selector: '[data-tour="requests"]',
-    title: 'Purchase approvals',
-    body: 'Purchase requests require your sign-off. You review the item, quantity, and justification before committing budget. Approved purchases trigger a Jira ticket.',
-    roles: ['REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    title: 'Requests page',
+    body: 'All requests in one place — filter by status or type. Pending items are highlighted. Each row shows who needs to approve it.',
+    roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
   },
   {
     id: 'shipments',
     selector: '[data-tour="shipments"]',
     title: 'Shipments',
-    body: 'Track every package through 5 stages — Preparing, Shipped, In Transit, Delivered, Received. Confirm receipt here and inventory updates automatically.',
+    body: 'Once approved, a request becomes a shipment. Add the carrier and tracking number, mark it shipped, and the item shows as in transit. When it arrives, confirm receipt — inventory updates automatically.',
     roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    tip: 'Live carrier tracking (FedEx, UPS, USPS, DHL) is coming in the next phase',
   },
   {
     id: 'reports',
     selector: '[data-tour="reports"]',
     title: 'Reports',
-    body: 'Stock health trends, transfer activity over time, aging inventory, and a full cross-site summary. Read-only visibility for everyone.',
-    roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
-    tip: '',
+    body: 'Stock health across all sites, transfer trends over time, aging inventory that\'s been idle too long, and a full site summary with health scores.',
+    roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
+    tip: 'Use this to spot imbalances before they become problems',
   },
   {
     id: 'admin',
     selector: '[data-tour="admin"]',
     title: 'Admin',
-    body: 'Manage users, locations, item catalog, and integrations. Connect Jira, Slack, and Okta here — each takes just an API key.',
-    roles: ['ADMIN'],
-    tip: '',
+    body: 'Manage users and roles, add locations, control the item catalog, and connect integrations. Jira creates tickets automatically, Slack sends notifications, Okta handles enterprise SSO.',
+    roles: ['SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
+  },
+  {
+    id: 'demo-bar',
+    selector: '[data-tour="demo-bar"]',
+    title: 'Demo bar',
+    body: 'You\'re in demo mode. Switch between all four roles instantly using the bar at the bottom — no logout needed. Each role gets its own first-time experience.',
+    roles: ['TECHNICIAN','SITE_MANAGER','REGIONAL_MANAGER','ADMIN'],
   },
 ]
 
 interface Props {
+  role: Role
   seenSteps: string[]
   onComplete: () => void
   onMarkSeen: (step: string) => void
 }
 
-export function SpotlightTour({ seenSteps, onComplete, onMarkSeen }: Props) {
-  const { role } = usePermissions()
+export function SpotlightTour({ role, seenSteps, onComplete, onMarkSeen }: Props) {
+  const steps = ALL_STEPS.filter(s => s.roles.includes(role))
   const [idx, setIdx]   = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
-
-  // Filter steps to only those relevant for this role
-  const steps = ALL_STEPS.filter(s => s.roles.includes(role))
+  const tooltipRef      = useRef<HTMLDivElement>(null)
 
   const step = steps[idx]
 
@@ -123,7 +116,7 @@ export function SpotlightTour({ seenSteps, onComplete, onMarkSeen }: Props) {
     onMarkSeen(step.id)
   }, [idx, step?.id])
 
-  if (!step) { onComplete(); return null }
+  if (!step) return null
 
   function next() {
     if (idx < steps.length - 1) setIdx(i => i + 1)
@@ -131,97 +124,92 @@ export function SpotlightTour({ seenSteps, onComplete, onMarkSeen }: Props) {
   }
   function prev() { if (idx > 0) setIdx(i => i - 1) }
 
-  const PAD = 6
+  const PAD      = 8
+  const TOOLTIP_W = 300
   const winW = typeof window !== 'undefined' ? window.innerWidth : 1200
   const winH = typeof window !== 'undefined' ? window.innerHeight : 800
 
-  // Smart tooltip placement — prefer below, flip above if too close to bottom
-  let tooltipTop  = rect ? rect.bottom + PAD + 12 : 120
-  let tooltipLeft = rect ? Math.max(16, Math.min(rect.left, winW - 316)) : 40
-  if (rect && tooltipTop + 200 > winH) tooltipTop = rect.top - 200 - PAD
+  let tipTop  = rect ? rect.bottom + PAD + 12 : 160
+  let tipLeft = rect ? Math.max(12, Math.min(rect.left, winW - TOOLTIP_W - 12)) : 40
 
-  const roleColor: Record<string, string> = {
-    TECHNICIAN: '#8b949e', SITE_MANAGER: '#3B8BFA',
-    REGIONAL_MANAGER: '#2ABFA0', ADMIN: '#E8407A',
-  }
-  const color = roleColor[role] ?? 'var(--teal)'
+  // flip above if too low
+  if (rect && tipTop + 200 > winH) tipTop = rect.top - PAD - 210
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 900, pointerEvents: 'none' }}>
-      {/* Dark overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} />
+    <div style={{ position:'fixed', inset:0, zIndex:900, pointerEvents:'none' }}>
+      {/* Overlay */}
+      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.6)' }} />
 
-      {/* Spotlight cutout */}
+      {/* Spotlight */}
       {rect && (
         <div style={{
-          position: 'absolute',
-          top: rect.top - PAD, left: rect.left - PAD,
-          width: rect.width + PAD * 2, height: rect.height + PAD * 2,
+          position:'absolute',
+          top:  rect.top  - PAD,
+          left: rect.left - PAD,
+          width:  rect.width  + PAD * 2,
+          height: rect.height + PAD * 2,
           borderRadius: 10,
           boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
-          border: `2px solid ${color}`,
-          transition: 'all 0.25s ease',
+          border: '2px solid #2ABFA0',
           pointerEvents: 'none',
+          transition: 'all 0.3s ease',
         }} />
       )}
 
-      {/* Tooltip card */}
-      <div style={{
-        position: 'absolute', top: tooltipTop, left: tooltipLeft,
-        width: 300,
-        background: '#161b22', border: `1px solid ${color}40`,
-        borderRadius: 14, padding: '18px 20px',
-        pointerEvents: 'all',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-        transition: 'top 0.25s ease, left 0.25s ease',
+      {/* Tooltip */}
+      <div ref={tooltipRef} style={{
+        position:'absolute', top:tipTop, left:tipLeft,
+        width: TOOLTIP_W,
+        background:'#161b22',
+        border:'1px solid rgba(255,255,255,0.12)',
+        borderRadius:14, padding:'18px 20px',
+        pointerEvents:'all',
+        boxShadow:'0 12px 40px rgba(0,0,0,0.5)',
+        transition:'top 0.3s ease, left 0.3s ease',
       }}>
-        {/* Role badge */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {ROLE_LABELS[role as keyof typeof ROLE_LABELS]}
-            </span>
+        {/* Step counter */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'#2ABFA0', textTransform:'uppercase', letterSpacing:'0.5px' }}>
+            {step.title}
           </div>
-          <span style={{ fontSize: 11, color: '#8b949e' }}>{idx + 1} / {steps.length}</span>
+          <div style={{ fontSize:11, color:'#8b949e' }}>{idx + 1} / {steps.length}</div>
         </div>
 
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{step.title}</div>
-        <p style={{ fontSize: 13, color: '#8b949e', lineHeight: 1.65, margin: '0 0 16px' }}>{step.body}</p>
+        <p style={{ fontSize:13, color:'#8b949e', lineHeight:1.65, margin:'0 0 10px' }}>
+          {step.body}
+        </p>
 
-        {/* Step dots */}
-        <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
+        {/* Tip */}
+        {step.tip && (
+          <div style={{ background:'rgba(42,191,160,0.08)', border:'1px solid rgba(42,191,160,0.2)', borderRadius:7, padding:'8px 10px', fontSize:11, color:'#2ABFA0', marginBottom:12, lineHeight:1.5 }}>
+            💡 {step.tip}
+          </div>
+        )}
+
+        {/* Progress dots */}
+        <div style={{ display:'flex', gap:5, marginBottom:14 }}>
           {steps.map((_, i) => (
             <div key={i} style={{
-              height: 3, flex: 1, borderRadius: 2,
-              background: i <= idx ? color : 'rgba(255,255,255,0.12)',
-              transition: 'background 0.2s',
+              height: 3, borderRadius: 2,
+              flex: i === idx ? 2 : 1,
+              background: i < idx ? '#2ABFA0' : i === idx ? '#2ABFA0' : 'rgba(255,255,255,0.12)',
+              transition: 'all 0.25s',
             }} />
           ))}
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={onComplete} style={{
-            padding: '6px 12px', borderRadius: 6, fontSize: 11,
-            background: 'transparent', color: '#8b949e',
-            border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-          }}>
+        <div style={{ display:'flex', gap:8, justifyContent:'space-between', alignItems:'center' }}>
+          <button onClick={onComplete} style={{ padding:'6px 10px', borderRadius:6, fontSize:11, background:'transparent', color:'#8b949e', border:'1px solid rgba(255,255,255,0.1)', cursor:'pointer' }}>
             Skip tour
           </button>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display:'flex', gap:7 }}>
             {idx > 0 && (
-              <button onClick={prev} style={{
-                padding: '6px 12px', borderRadius: 6, fontSize: 11,
-                background: 'rgba(255,255,255,0.06)', color: '#e6edf3',
-                border: 'none', cursor: 'pointer',
-              }}>← Back</button>
+              <button onClick={prev} style={{ padding:'6px 12px', borderRadius:6, fontSize:11, fontWeight:600, background:'rgba(255,255,255,0.06)', color:'#e6edf3', border:'none', cursor:'pointer' }}>
+                ← Back
+              </button>
             )}
-            <button onClick={next} style={{
-              padding: '6px 18px', borderRadius: 6, fontSize: 11,
-              fontWeight: 600, background: color,
-              color: '#0d1117', border: 'none', cursor: 'pointer',
-            }}>
+            <button onClick={next} style={{ padding:'6px 16px', borderRadius:6, fontSize:12, fontWeight:600, background:'#2ABFA0', color:'#0d1117', border:'none', cursor:'pointer' }}>
               {idx < steps.length - 1 ? 'Next →' : 'Done ✓'}
             </button>
           </div>

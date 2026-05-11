@@ -1,28 +1,34 @@
 'use client'
-// lib/hooks/usePermissions.ts
-// Use this hook anywhere to get the current user's permissions
-
-import { useEffect, useState } from 'react'
-import { PERMISSIONS, ROLE_BY_EMAIL, type UserRole, type Permission } from '@/lib/permissions'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getPermissions, type Permissions, type Role } from '@/lib/permissions'
 
-const DEFAULT: Permission = PERMISSIONS['TECHNICIAN']
+const DEMO_ROLE_MAP: Record<string, Role> = {
+  'tech@itflow-demo.com':     'TECHNICIAN',
+  'manager@itflow-demo.com':  'SITE_MANAGER',
+  'regional@itflow-demo.com': 'REGIONAL_MANAGER',
+  'admin@itflow-demo.com':    'ADMIN',
+}
 
 export function usePermissions() {
-  const [role, setRole]   = useState<UserRole>('TECHNICIAN')
-  const [perms, setPerms] = useState<Permission>(DEFAULT)
+  const [role, setRole]   = useState<Role>('TECHNICIAN')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      const email = data.user?.email ?? ''
-      const r = ROLE_BY_EMAIL[email] ?? 'TECHNICIAN'
-      setRole(r)
-      setPerms(PERMISSIONS[r])
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        // Demo accounts — role from email map
+        const demoRole = DEMO_ROLE_MAP[user.email]
+        if (demoRole) { setRole(demoRole); setLoading(false); return }
+        // Real accounts — role from user_metadata or DB
+        const metaRole = user.user_metadata?.role as Role
+        if (metaRole) { setRole(metaRole); setLoading(false); return }
+      }
       setLoading(false)
     })
   }, [])
 
-  return { role, perms, loading }
+  const permissions: Permissions = getPermissions(role)
+  return { role, permissions, loading }
 }

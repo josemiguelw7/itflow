@@ -39,7 +39,7 @@ export function DemoBar({ currentEmail }: Props) {
       padding:'10px 16px',
       background:'rgba(13,17,23,0.96)',
       borderTop:'1px solid rgba(255,255,255,0.08)',
-    }}>
+    }} data-tour="demo-bar">
       <div style={{ maxWidth:1400, margin:'0 auto', display:'flex', alignItems:'center', gap:14 }}>
 
         <div style={{ display:'flex', alignItems:'center', gap:7, flexShrink:0 }}>
